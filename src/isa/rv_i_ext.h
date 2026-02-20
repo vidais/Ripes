@@ -402,7 +402,7 @@ enum class Funct7 {
 };
 
 template <typename InstrImpl, RVISA::OpcodeID opcodeID, typename Funct3Type,
-          Funct3Type funct3, Funct7 funct7>
+          Funct3Type funct3, typename Funct7Type, Funct7Type funct7>
 struct Instr : public RV_Instruction<InstrImpl> {
   struct Opcode
       : public OpcodeSet<OpPartOpcode<opcodeID>,
@@ -412,9 +412,10 @@ struct Instr : public RV_Instruction<InstrImpl> {
 };
 
 template <typename InstrImpl, Funct3 funct3, Funct7 funct7 = Funct7::DEFAULT>
-using Instr32 = Instr<InstrImpl, OpcodeID::OP, Funct3, funct3, funct7>;
+using Instr32 = Instr<InstrImpl, OpcodeID::OP, Funct3, funct3, Funct7, funct7>;
 template <typename InstrImpl, Funct3 funct3, Funct7 funct7 = Funct7::DEFAULT>
-using Instr64 = Instr<InstrImpl, OpcodeID::OP32, Funct3, funct3, funct7>;
+using Instr64 =
+    Instr<InstrImpl, OpcodeID::OP32, Funct3, funct3, Funct7, funct7>;
 
 struct Add : public Instr32<Add, Funct3::ADD> {
   constexpr static std::string_view NAME = "add";
