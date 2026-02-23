@@ -25,11 +25,11 @@ enum class Funct3 {
 };
 
 template <typename InstrImpl, Funct3 funct3>
-using Instr32 =
-    ExtI::TypeR::Instr<InstrImpl, OpcodeID::OP, Funct3, funct3, Funct7::M_EXT>;
+using Instr32 = ExtI::TypeR::Instr<InstrImpl, OpcodeID::OP, Funct3, funct3,
+                                   Funct7, Funct7::M_EXT>;
 template <typename InstrImpl, Funct3 funct3>
 using Instr64 = ExtI::TypeR::Instr<InstrImpl, OpcodeID::OP32, Funct3, funct3,
-                                   Funct7::M_EXT>;
+                                   Funct7, Funct7::M_EXT>;
 
 struct Mul : public Instr32<Mul, Funct3::MUL> {
   constexpr static std::string_view NAME = "mul";

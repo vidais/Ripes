@@ -54,6 +54,10 @@ extern const QStringList GPRRegAliases;
 extern const QStringList GPRRegNames;
 extern const QStringList GPRRegDescs;
 
+extern const QStringList FPRRegAliases;
+extern const QStringList FPRRegNames;
+extern const QStringList FPRRegDescs;
+
 constexpr unsigned INSTR_BITS = 32;
 
 template <typename InstrImpl>
@@ -109,12 +113,32 @@ struct RV_FPRInfo : public RegFileInfoInterface {
   std::string_view regFileName() const override { return FPR; }
   std::string_view regFileDesc() const override { return FPR_DESC; }
   // TODO: Fill out RISC-V floating point register info
-  unsigned int regCnt() const override { return 0; }
-  QString regName(unsigned) const override { return QString(); }
-  QString regAlias(unsigned) const override { return QString(); }
-  QString regInfo(unsigned) const override { return QString(); }
+  unsigned int regCnt() const override { return 32; }
+  QString regName(unsigned i) const override {
+    return RVISA::FPRRegNames.size() > static_cast<int>(i)
+               ? RVISA::FPRRegNames.at(static_cast<int>(i))
+               : QString();
+  }
+  QString regAlias(unsigned i) const override {
+    return RVISA::FPRRegAliases.size() > static_cast<int>(i)
+               ? RVISA::FPRRegAliases.at(static_cast<int>(i))
+               : QString();
+  }
+  QString regInfo(unsigned i) const override {
+    return RVISA::FPRRegDescs.size() > static_cast<int>(i)
+               ? RVISA::FPRRegDescs.at(static_cast<int>(i))
+               : QString();
+  }
   bool regIsReadOnly(unsigned) const override { return false; }
-  unsigned int regNumber(const QString &, bool &success) const override {
+  unsigned int regNumber(const QString &reg, bool &success) const override {
+    QString regRes = reg;
+    success = true;
+    if (reg[0] == 'f' && (RVISA::FPRRegNames.count(reg) != 0)) {
+      regRes.remove('f');
+      return regRes.toInt(&success, 10);
+    } else if (RVISA::FPRRegAliases.contains(reg)) {
+      return RVISA::FPRRegAliases.indexOf(reg);
+    }
     success = false;
     return 0;
   }
@@ -142,10 +166,15 @@ void enableExt(const ISAInfoBase *isa, InstrVec &instructions,
                PseudoInstrVec &pseudoInstructions);
 }
 
+namespace ExtF {
+void enableExt(const ISAInfoBase *isa, InstrVec &instructions,
+               PseudoInstrVec &pseudoInstructions);
+}
+
 class RV_ISAInfoBase : public ISAInfoBase {
 public:
   static const QStringList &getSupportedExtensions() {
-    static const QStringList ext = {"M", "C"};
+    static const QStringList ext = {"M", "C", "F", "D"};
     return ext;
   }
   static const QStringList &getDefaultExtensions() {
@@ -218,6 +247,10 @@ public:
       return "Integer multiplication and division";
     if (ext == "C")
       return "Compressed instructions";
+    if (ext == "F")
+      return "Single Precision Floating-point";
+    if (ext == "D")
+      return "Double Precision Floating-point";
     Q_UNREACHABLE();
   }
 
@@ -238,6 +271,9 @@ protected:
         break;
       case 'C':
         RVISA::ExtC::enableExt(this, m_instructions, m_pseudoInstructions);
+        break;
+      case 'F':
+        RVISA::ExtF::enableExt(this, m_instructions, m_pseudoInstructions);
         break;
       }
     }
@@ -277,6 +313,9 @@ enum OpcodeID {
   OP32 = 0b0111011,
   SYSTEM = 0b1110011,
   AUIPC = 0b0010111,
+  OP_FP = 0b1010011,
+  LOAD_FP = 0b0000111,
+  STORE_FP = 0b0100111,
   INVALID = 0b0
 };
 enum QuadrantID {
@@ -316,6 +355,9 @@ struct OpPartFunct7 : public OpPart<funct7, BitRange<25, 31, N>> {};
 template <typename RegImpl, unsigned tokenIndex, typename Range>
 struct GPR_Reg : public Reg<RegImpl, tokenIndex, Range, RV_GPRInfo> {};
 
+template <typename RegImpl, unsigned tokenIndex, typename Range>
+struct FPR_Reg : public Reg<RegImpl, tokenIndex, Range, RV_FPRInfo> {};
+
 /// The RISC-V Rs1 field contains a source register index.
 /// It is defined as a 5-bit field in bits 15-19 of the instruction
 template <unsigned tokenIndex>
@@ -332,10 +374,42 @@ struct RegRs2
   constexpr static std::string_view getName() { return "rs2"; }
 };
 
+/// The RISC-V Rs3 field contains a source register index.
+/// It is defined as a 5-bit field in bits 25-29 of the instruction (R4-type)
+template <unsigned tokenIndex>
+struct RegRs3
+    : public GPR_Reg<RegRs3<tokenIndex>, tokenIndex, BitRange<25, 29>> {
+  constexpr static std::string_view getName() { return "rs3"; }
+};
+
 /// The RISC-V Rd field contains a destination register index.
 /// It is defined as a 5-bit field in bits 7-11 of the instruction
 template <unsigned tokenIndex>
 struct RegRd : public GPR_Reg<RegRd<tokenIndex>, tokenIndex, BitRange<7, 11>> {
+  constexpr static std::string_view getName() { return "rd"; }
+};
+
+/// The RISC-V FPR Rs1 field contains a floating-point source register index.
+/// It is defined as a 5-bit field in bits 15-19 of the instruction
+template <unsigned tokenIndex>
+struct RegFRs1
+    : public FPR_Reg<RegFRs1<tokenIndex>, tokenIndex, BitRange<15, 19>> {
+  constexpr static std::string_view getName() { return "rs1"; }
+};
+
+/// The RISC-V FPR Rs2 field contains a floating-point source register index.
+/// It is defined as a 5-bit field in bits 20-24 of the instruction
+template <unsigned tokenIndex>
+struct RegFRs2
+    : public FPR_Reg<RegFRs2<tokenIndex>, tokenIndex, BitRange<20, 24>> {
+  constexpr static std::string_view getName() { return "rs2"; }
+};
+
+/// The RISC-V FPR Rd field contains a floating-point destination register
+/// index. It is defined as a 5-bit field in bits 7-11 of the instruction
+template <unsigned tokenIndex>
+struct RegFRd
+    : public FPR_Reg<RegFRd<tokenIndex>, tokenIndex, BitRange<7, 11>> {
   constexpr static std::string_view getName() { return "rd"; }
 };
 
