@@ -120,12 +120,13 @@ struct Fclasss : public Instr32<Fclasss, Funct3::FCLASS, Funct7::FCLASS> {
 
 namespace TypeR4 {
 
-template <typename InstrImpl, TypeR::Funct3 funct3, TypeR::Funct7 funct7>
-using Instr32 = ExtI::TypeR::Instr<InstrImpl, OpcodeID::OP_FP, TypeR::Funct3,
-                                   funct3, TypeR::Funct7, funct7>;
+template <typename InstrImpl, RVISA::OpcodeID opcodeID, TypeR::Funct3 funct3,
+          TypeR::Funct7 funct7>
+using Instr32 = ExtI::TypeR::Instr<InstrImpl, opcodeID, TypeR::Funct3, funct3,
+                                   TypeR::Funct7, funct7>;
 
-struct Fmadds
-    : public Instr32<Fmadds, TypeR::Funct3::FADD, TypeR::Funct7::FMADD> {
+struct Fmadds : public Instr32<Fmadds, OpcodeID::FMADD, TypeR::Funct3::FADD,
+                               TypeR::Funct7::FMADD> {
   constexpr static std::string_view NAME = "fmadd.s";
   Fmadds() {
     addExtraMatchCond(
@@ -133,8 +134,8 @@ struct Fmadds
   }
 };
 
-struct Fmsubs
-    : public Instr32<Fmsubs, TypeR::Funct3::FADD, TypeR::Funct7::FMSUB> {
+struct Fmsubs : public Instr32<Fmsubs, OpcodeID::FMSUB, TypeR::Funct3::FADD,
+                               TypeR::Funct7::FMSUB> {
   constexpr static std::string_view NAME = "fmsub.s";
   Fmsubs() {
     addExtraMatchCond(
@@ -142,8 +143,8 @@ struct Fmsubs
   }
 };
 
-struct Fnmsubs
-    : public Instr32<Fnmsubs, TypeR::Funct3::FADD, TypeR::Funct7::FNMSUB> {
+struct Fnmsubs : public Instr32<Fnmsubs, OpcodeID::FNMSUB, TypeR::Funct3::FADD,
+                                TypeR::Funct7::FNMSUB> {
   constexpr static std::string_view NAME = "fnmsub.s";
   Fnmsubs() {
     addExtraMatchCond(
@@ -151,8 +152,8 @@ struct Fnmsubs
   }
 };
 
-struct Fnmadds
-    : public Instr32<Fnmadds, TypeR::Funct3::FADD, TypeR::Funct7::FNMADD> {
+struct Fnmadds : public Instr32<Fnmadds, OpcodeID::FNMADD, TypeR::Funct3::FADD,
+                                TypeR::Funct7::FNMADD> {
   constexpr static std::string_view NAME = "fnmadd.s";
   Fnmadds() {
     addExtraMatchCond(

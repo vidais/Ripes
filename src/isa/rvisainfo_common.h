@@ -112,7 +112,6 @@ struct RV_GPRInfo : public RegFileInfoInterface {
 struct RV_FPRInfo : public RegFileInfoInterface {
   std::string_view regFileName() const override { return FPR; }
   std::string_view regFileDesc() const override { return FPR_DESC; }
-  // TODO: Fill out RISC-V floating point register info
   unsigned int regCnt() const override { return 32; }
   QString regName(unsigned i) const override {
     return RVISA::FPRRegNames.size() > static_cast<int>(i)
@@ -316,6 +315,10 @@ enum OpcodeID {
   OP_FP = 0b1010011,
   LOAD_FP = 0b0000111,
   STORE_FP = 0b0100111,
+  FMADD = 0b1000011,
+  FMSUB = 0b1000111,
+  FNMADD = 0b1001111,
+  FNMSUB = 0b1001011,
   INVALID = 0b0
 };
 enum QuadrantID {
