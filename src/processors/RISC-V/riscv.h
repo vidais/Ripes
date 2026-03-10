@@ -10,6 +10,8 @@ namespace Ripes {
 
 namespace RVISA {
 
+  constexpr unsigned FLEN = 32;
+
 template <unsigned XLEN>
 ProcessorISAInfo supportsISA() {
   using RVISAInfo = ISAInfo<XLenToRVISA<XLEN>()>;
@@ -90,7 +92,7 @@ enum class RVInstr {
   SLLIW,
   SRLIW,
   SRAIW,
-  ADDW,
+  // ADDW,
   SUBW,
   SLLW,
   SRLW,
@@ -141,6 +143,25 @@ enum class ALUOp {
   REMW,
   REMUW
 };
+
+enum class FPUOp{
+  FADD,
+  FSUB,
+  FMUL,
+  FDIV,
+  FSQRT,
+  FLT,
+  FLE,
+  FEQ,
+  FSGNJ,
+  FSGNJN,
+  FSGNJX,
+  FCVTWS,
+  FCVTWUS,
+  FCVTSW,
+  FCVTSWU
+};
+
 enum class RegWrSrc { MEMREAD, ALURES, PC4 };
 enum class AluSrc1 { REG1, PC };
 enum class AluSrc2 { REG2, IMM };
